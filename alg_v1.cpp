@@ -242,7 +242,7 @@ void taster() {
 
 
 		//receive clk and tid from other tasters
-					log_file << "receiving tids and clk from other tasters" << endl;
+					//log_file << "receiving tids and clk from other tasters" << endl;
 		for (int i = K; i < K + D; ++i) {
 			if (i != me.tid) {
 				MPI::COMM_WORLD.Recv(t, 2, MPI_INT, MPI_ANY_SOURCE, ROOM_PLACE);
@@ -254,11 +254,11 @@ void taster() {
 			}
 		}
 
-					log_file << "taster " << me.tid << ": tids from other tasters received (unsorted)" << endl;
-					log_file << "tid : clk" << endl;
-					for (vector<Process>::iterator it = tasters.begin(); it != tasters.end(); ++it) {
-						log_file << it->tid << " : " << it->clk << endl;
-					}
+					//log_file << "taster " << me.tid << ": tids from other tasters received (unsorted)" << endl;
+					//log_file << "tid : clk" << endl;
+					//for (vector<Process>::iterator it = tasters.begin(); it != tasters.end(); ++it) {
+					//	log_file << it->tid << " : " << it->clk << endl;
+					//}
 
 		sort(tasters.begin(), tasters.end(), process_comp);
 
