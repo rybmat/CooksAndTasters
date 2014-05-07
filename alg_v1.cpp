@@ -25,7 +25,6 @@ int size, K, S, P, Z, D;
 int t[2];
 Process me;
 
-
 int find_index(vector<Process>& v, int tid) {
 	for (int i = 0; i < v.size(); ++i) {
 		if (v[i].tid == tid)
@@ -102,19 +101,18 @@ void write_mark(int tid, int room) {
 }
 
 void cook() {
+	srand(time(NULL));
 	vector<Process> cooks;
 	vector<int> tasters;
 	int team_id, room_id;
 	Process p;
-
-					ostringstream fname;
-					fname << "log/cook_" << me.tid << ".log";
-					ofstream log_file(fname.str());
-
-					log_file << "cook: tid " << me.tid << endl;
+	ostringstream fname;
+	fname << "log/cook_" << me.tid << ".log";
+	ofstream log_file(fname.str().c_str(),fstream::app|fstream::out);
+	log_file << "cook: tid " << me.tid << endl;
 
 	for (int iter = 0; iter < ITERS_NUM; ++ iter) {
-		//send my tid and clk to othher cooks
+		//send my tid and clk to other cooks
 		for (int i = 0; i < K; ++i) {
 			t[0] = me.clk;
 			t[1] = me.tid;
@@ -136,7 +134,6 @@ void cook() {
 				cooks.push_back(p);
 			}
 		}
-
 		//sort cooks table
 		sort(cooks.begin(), cooks.end(), process_comp);
 
@@ -158,7 +155,6 @@ void cook() {
 			cooks.clear();
 			continue;
 		}
-
 		room_id = team_id;
 
 					log_file << "cook " << me.tid << ": room_id " << room_id << endl;
@@ -170,7 +166,7 @@ void cook() {
         	MPI::COMM_WORLD.Send(t, 2, MPI_INT, i, TASTERS);
 
         			log_file << "cook " << me.tid << ": tid and room_id sent to tasters " << endl;
-
+		
         //wait for fill the room by tasters
         int id;
         for (int i = 0; i < P; ++i) {
@@ -210,26 +206,25 @@ void cook() {
 
 		tasters.clear();
 		cooks.clear();
-
 					log_file << "==================================" << endl;
 	}
 }
 
 void taster() {
+	srand(time(NULL));
 	vector<Process> tasters;
 	vector<int> cooks;
 	Process p;
 	int room_id;
 
-					ostringstream fname;
-					fname << "log/taster_" << me.tid << ".log";
-					ofstream log_file(fname.str());
+	ostringstream fname;
+	fname << "log/taster_" << me.tid << ".log";
+	ofstream log_file(fname.str().c_str(),fstream::app|fstream::out);
 
-					log_file << "taster: tid " << me.tid << endl;
+	log_file << "taster: tid " << me.tid << endl;
 
 	for (int iter = 0; iter < ITERS_NUM; ++ iter) {
 		//send clk and tid to other tasters
-		
 		for (int i = K; i < K + D; ++i) {
 			t[0] = me.clk;
 			t[1] = me.tid;
@@ -242,7 +237,7 @@ void taster() {
 
 
 		//receive clk and tid from other tasters
-					//log_file << "receiving tids and clk from other tasters" << endl;
+					log_file << "receiving tids and clk from other tasters" << endl;
 		for (int i = K; i < K + D; ++i) {
 			if (i != me.tid) {
 				MPI::COMM_WORLD.Recv(t, 2, MPI_INT, MPI_ANY_SOURCE, ROOM_PLACE);
@@ -254,12 +249,11 @@ void taster() {
 			}
 		}
 
-					//log_file << "taster " << me.tid << ": tids from other tasters received (unsorted)" << endl;
-					//log_file << "tid : clk" << endl;
+					log_file << "taster " << me.tid << ": tids from other tasters received (unsorted)" << endl;
+					log_file << "tid : clk" << endl;
 					//for (vector<Process>::iterator it = tasters.begin(); it != tasters.end(); ++it) {
 					//	log_file << it->tid << " : " << it->clk << endl;
 					//}
-
 		sort(tasters.begin(), tasters.end(), process_comp);
 
 					log_file << "taster " << me.tid << ": tids from other tasters received and sorted" << endl;
@@ -270,13 +264,14 @@ void taster() {
 
 		int ind = find_index(tasters, me.tid);
 		room_id = ((ind / P) < S) ? (ind / P) : -1;
-
-
+		
 		if (room_id == -1) {
 					
 					log_file << "taster " << me.tid << ": continue" << endl;
 					log_file << "==================================" << endl;
 			
+			for (int i = 0; i < S*Z; ++i) 
+				MPI::COMM_WORLD.Recv(t, 2, MPI_INT, MPI_ANY_SOURCE, TASTERS);
 			tasters.clear();
 			continue;
 		}
@@ -286,8 +281,8 @@ void taster() {
 		//receive from cooks in which room they serve
 					
 					log_file << "cooks and rooms:" << endl;
-		
-		for (int i = 0; i < Z*S; ++i) {
+			
+		for (int i = 0; i < S*Z; ++i) {
 			MPI::COMM_WORLD.Recv(t, 2, MPI_INT, MPI_ANY_SOURCE, TASTERS);
 					
 					log_file << i << "room:" << t[0] << " cook:" << t[1] << endl;
@@ -315,7 +310,7 @@ void taster() {
 		for (int i = 0; i < Z; ++i) {
 			MPI::COMM_WORLD.Recv(&tt, 1, MPI_INT, MPI_ANY_SOURCE, MEAL);
 		}
-
+		//cout <<"iter " <<iter <<endl;
 					log_file << "taster " << me.tid << ": cooks are out received" << endl;
 
 		eat(me.tid, room_id);
@@ -350,7 +345,7 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	srand(time(NULL));
+	//srand(time(NULL));
 
 	if (me.tid < K) {
 		cook();

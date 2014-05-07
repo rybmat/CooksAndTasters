@@ -10,3 +10,6 @@ all:
 
 run:
 	mpirun -np 50 ./$(TARGET) $K $S $P $Z
+
+clean:
+	rm $(TARGET)
